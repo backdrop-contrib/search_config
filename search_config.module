@@ -1,0 +1,231 @@
+<?php
+//$Id$
+
+/**
+ * @file
+ * Allows admins to configure the advanced search form.
+ *
+ * In general the search_config module allows users to decide which fields
+ * to show on the advanced search form. This does not stop astute users from
+ * placing the search criteria directly in the search text fields. The module
+ * allows provides four (4) new permissions but for the time being won't do
+ * much good.
+ *
+ * Admins will be able to decide if the following fields or selected members 
+ * of their groups are removed from the search form.
+ *  - keywords
+ *  - categories
+ *  - node types
+ *
+ * What this module achieved at the moment can also be achieved by theming the
+ * search form. Also, it does not control what can be searched. 
+ *
+ * @author Nesta Campbell
+ * 
+ */
+
+/**
+ * Implementation of hook_help()
+ */
+function search_config_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Configure the advanced search form');
+  }
+}
+
+/**
+ * Implementation of hook_perm()
+ *
+ * At the moment this module does not control access to what can be searched
+ * for only what fields are displayed to the user. Therefore, these permissions
+ * don't really do much but allow the displaying of form fields per role.
+ */
+function search_config_perm() {
+  return array('use advanced search', 'search by node type', 'search by category', 'use keyword search');
+}
+
+/**
+ * Implementation of hook_form_alter()
+ */
+function search_config_form_alter($form_id, &$form) {
+  switch ($form_id) {
+    case 'search_form':
+      if (arg(1) == 'node') {
+        if (variable_get('search_config_disable_all', 0) || !user_access('use advanced search')) {
+          unset($form['advanced']);
+          return;
+        }
+
+        // Keywords
+        if (user_access('use keyword search')) {
+          if (variable_get('search_config_disable_or', 0)) {
+            unset($form['advanced']['keywords']['or']);
+          }
+          if (variable_get('search_config_disable_phrase', 0)) {
+            unset($form['advanced']['keywords']['phrase']);
+          }
+          if (variable_get('search_config_disable_negative', 0)) {
+            unset($form['advanced']['keywords']['negative']);
+          }
+        }
+        // Remove all the keyword search fields
+        else { 
+          unset($form['advanced']['keywords']);
+        }
+
+        // Node types
+        // We will need to rebuild the checkboxes for the node type
+        $remove = variable_get('search_config_disable_type', array());
+        if ($remove['all'] || !user_access('search by node type')) {
+          unset($form['advanced']['type']);
+        }
+        else {
+          $types = node_get_types();
+          
+          foreach ($types as $module => $type) {
+            if ($remove[$module]) {
+              unset($types[$module]);
+            }
+          }
+        
+          // Rebuild form item -- copied from node.module
+          $form['advanced']['type'] = array(
+            '#type' => 'checkboxes',
+            '#title' => t('Only of the type(s)'),
+            '#prefix' => '<div class="criterion">',
+            '#suffix' => '</div>',
+            '#options' => $types,
+          );
+        }
+  
+        // Taxonomy
+        if (variable_get('search_config_disable_category_all', 0) || !user_access('search by category')) {
+          unset($form['advanced']['category']);
+        }
+        else {
+          $terms = variable_get('search_config_disable_category', array());
+          $taxonomy = module_invoke('taxonomy', 'form_all', 1);
+
+          // FIXME: What about multiple hierarchy categories?
+          foreach ($taxonomy as $vocab => $term) {
+            foreach ($term as $k => $v) {
+              if(in_array($k, $terms)) {
+                unset($taxonomy[$vocab][$k]);
+              }
+            }
+          }
+
+          // Taxonomy box:
+          $form['advanced']['category'] = array(
+            '#type' => 'select',
+            '#title' => t('Only in the category(s)'),
+            '#prefix' => '<div class="criterion">',
+            '#size' => 10,
+            '#suffix' => '</div>',
+            '#options' => $taxonomy,
+            '#multiple' => TRUE,
+          );
+
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_search()
+ */
+function search_config_search($op) {
+  switch ($op) {
+    case 'admin':
+      $form['search_config'] = array(        
+        '#type' => 'fieldset',
+        '#title' => t('Advanced search form configuration'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      
+      $form['search_config']['search_config_disable_all'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Disable \'Advanced search\' form'),
+        '#default_value' => variable_get('search_config_disable_all', 0)
+      );
+
+      // Keyword boxes:
+      $form['search_config']['keywords'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Keywords'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE ,
+        '#description' => t('Configuration for which keyword search fields should be displayed.')
+      );
+      
+      $form['search_config']['keywords']['search_config_disable_or'] = array( 
+        '#type' => 'checkbox',
+        '#title' => t('Containing any of the words'),
+        '#default_value' => variable_get('search_config_disable_or', 0)
+      );
+      
+      $form['search_config']['keywords']['search_config_disable_phrase'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Containing the phrase'),
+        '#default_value' => variable_get('search_config_disable_phrase', 0)
+      );
+      
+      $form['search_config']['keywords']['search_config_disable_negative'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Containing none of the words'),
+        '#default_value' => variable_get('search_config_disable_negative', 0)
+      );
+      
+      // Taxonomy box
+      if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
+        $form['search_config']['category'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Categories'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE ,
+          '#description' => t('Categories to display')
+        );
+
+
+        $form['search_config']['category']['search_config_disable_category_all'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Disable category search'),
+          '#default_value' => variable_get('search_config_disable_category_all', 0)
+        );
+
+        $form['search_config']['category']['search_config_disable_category'] = array(
+          '#type' => 'select',
+          '#title' => t('Categories'),
+          '#options' => $taxonomy,
+          '#size' => 10,
+          '#multiple' => TRUE,
+          '#default_value' => variable_get('search_config_disable_category', array()),
+          '#description' => t('Disable searching by the selected categories')
+        );
+      }
+
+      // Node types 
+      $types = node_get_types();
+      $types = array_merge(array('all' => 'Disable all'), $types);
+
+      $form['search_config']['type'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Node types'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE ,
+        '#description' => t('Node types that users shouldn\'t be allowed to search by.')
+      );
+      
+      $form['search_config']['type']['search_config_disable_type'] = array(
+        '#type' => 'checkboxes',
+        '#options' => $types,
+        '#default_value' => variable_get('search_config_disable_type', array())
+      );
+      
+      return $form;
+  }
+}
+?>
