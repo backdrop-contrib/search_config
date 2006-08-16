@@ -8,7 +8,7 @@
  * In general the search_config module allows users to decide which fields
  * to show on the advanced search form. This does not stop astute users from
  * placing the search criteria directly in the search text fields. The module
- * allows provides four (4) new permissions but for the time being won't do
+ * also provides four (4) new permissions but for the time being won't do
  * much good.
  *
  * Admins will be able to decide if the following fields or selected members 
@@ -21,6 +21,7 @@
  * search form. Also, it does not control what can be searched. 
  *
  * @author Nesta Campbell
+ * @todo Look at multiple hierarchy taxonomies
  * 
  */
 
