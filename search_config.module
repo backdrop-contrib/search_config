@@ -26,16 +26,6 @@
  */
 
 /**
- * Implementation of hook_help()
- */
-function search_config_help($section) {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('Configure the advanced search form');
-  }
-}
-
-/**
  * Implementation of hook_perm()
  *
  * At the moment this module does not control access to what can be searched
