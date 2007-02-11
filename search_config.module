@@ -33,7 +33,7 @@
  * don't really do much but allow the displaying of form fields per role.
  */
 function search_config_perm() {
-  return array('use advanced search', 'search by node type', 'search by category', 'use keyword search');
+  return array('search by node type', 'search by category', 'use keyword search');
 }
 
 /**
@@ -43,11 +43,7 @@ function search_config_form_alter($form_id, &$form) {
   switch ($form_id) {
     case 'search_form':
       if (arg(1) == 'node') {
-        if (variable_get('search_config_disable_all', 0) || !user_access('use advanced search')) {
-          unset($form['advanced']);
-          return;
-        }
-
+        
         // Keywords
         if (user_access('use keyword search')) {
           if (variable_get('search_config_disable_or', 0)) {
@@ -144,12 +140,6 @@ function search_config_search($op) {
         '#title' => t('Advanced search form configuration'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
-      );
-      
-      $form['search_config']['search_config_disable_all'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Disable \'Advanced search\' form'),
-        '#default_value' => variable_get('search_config_disable_all', 0)
       );
 
       // Keyword boxes:
