@@ -8,8 +8,8 @@
  * In general the search_config module allows users to decide which fields
  * to show on the advanced search form. This does not stop astute users from
  * placing the search criteria directly in the search text fields. The module
- * also provides four (4) new permissions but for the time being won't do
- * much good.
+ * also provides four (3) new permissions but for the time being won't do much
+ * good.
  *
  * Admins will be able to decide if the following fields or selected members 
  * of their groups are removed from the search form.
@@ -17,8 +17,8 @@
  *  - categories
  *  - node types
  *
- * What this module achieved at the moment can also be achieved by theming the
- * search form. Also, it does not control what can be searched. 
+ * What this module achieves at the moment can also be achieved by theming the
+ * search form. Also, it does not control what can be searched.
  *
  * @author Nesta Campbell
  * @todo Look at multiple hierarchy taxonomies
@@ -28,8 +28,8 @@
 /**
  * Implementation of hook_perm()
  *
- * At the moment this module does not control access to what can be searched
- * for only what fields are displayed to the user. Therefore, these permissions
+ * At the moment this module does not control access to what can be searched,
+ * only what fields are displayed to the user. Therefore, these permissions
  * don't really do much but allow the displaying of form fields per role.
  */
 function search_config_perm() {
@@ -62,7 +62,7 @@ function search_config_form_alter($form_id, &$form) {
         }
 
         // Node types
-        // We will need to rebuild the checkboxes for the node type
+        // We will need to rebuild the checkboxes for the node types
         $remove = variable_get('search_config_disable_type', array());
         if ($remove['all'] || !user_access('search by node type')) {
           unset($form['advanced']['type']);
