@@ -95,34 +95,35 @@ function search_config_form_alter($form_id, &$form) {
           }
         }
   
-        // Taxonomy
-        if (variable_get('search_config_disable_category_all', 0) || !user_access('search by category')) {
-          unset($form['advanced']['category']);
-        }
-        else {
-          $terms = variable_get('search_config_disable_category', array());
-          $taxonomy = module_invoke('taxonomy', 'form_all', 1);
+        if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
+          // Taxonomy
+          if (variable_get('search_config_disable_category_all', 0) || !user_access('search by category')) {
+            unset($form['advanced']['category']);
+          }
+          else {
+            $terms = variable_get('search_config_disable_category', array());
 
-          // FIXME: What about multiple hierarchy categories?
-          foreach ($taxonomy as $vocab => $term) {
-            foreach ($term as $k => $v) {
-              if(in_array($k, $terms)) {
-                unset($taxonomy[$vocab][$k]);
+            // FIXME: What about multiple hierarchy categories?
+            foreach ($taxonomy as $vocab => $term) {
+              foreach ($term as $k => $v) {
+                if(in_array($k, $terms)) {
+                  unset($taxonomy[$vocab][$k]);
+                }
               }
             }
+
+            // Taxonomy box:
+            $form['advanced']['category'] = array(
+              '#type' => 'select',
+              '#title' => t('Only in the category(s)'),
+              '#prefix' => '<div class="criterion">',
+              '#size' => 10,
+              '#suffix' => '</div>',
+              '#options' => $taxonomy,
+              '#multiple' => TRUE,
+            );
+
           }
-
-          // Taxonomy box:
-          $form['advanced']['category'] = array(
-            '#type' => 'select',
-            '#title' => t('Only in the category(s)'),
-            '#prefix' => '<div class="criterion">',
-            '#size' => 10,
-            '#suffix' => '</div>',
-            '#options' => $taxonomy,
-            '#multiple' => TRUE,
-          );
-
         }
       }
       break;
