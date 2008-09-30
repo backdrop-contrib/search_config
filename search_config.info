@@ -1,5 +1,5 @@
 ; $Id$
 name = Search config
-description = Configure the advanced search form
+description = Configure display of the advanced search form
 dependencies = search
 
