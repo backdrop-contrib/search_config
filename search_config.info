@@ -1,5 +1,6 @@
 ; $Id$
 name = Search config
 description = Configure display of the advanced search form
-dependencies = search
+dependencies[] = search
 
+core = 6.x

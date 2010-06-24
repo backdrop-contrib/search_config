@@ -1,0 +1,119 @@
+# $Id$
+#
+# LANGUAGE translation of search_config module
+msgid ""
+msgstr ""
+"Project-Id-Version: search_config (6.x-1.5)\n"
+"POT-Creation-Date: 2009-11-06 01:46+0100\n"
+"PO-Revision-Date: 2009-11-12 11:51+0100\n"
+"Last-Translator: Simon Georges <simon.georges@alumni.enseeiht.fr>\n"
+"Language-Team: Capgemini Drupal Factory <drupal-factory@capgemini.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: search_config.module:85
+msgid "Only of the type(s)"
+msgstr "Du ou des types"
+
+#: search_config.module:131
+msgid "Only in the category(s)"
+msgstr "Dans la ou les catégories"
+
+#: search_config.module:164
+msgid "Advanced search configuration"
+msgstr "Configuration de la recherche avancée"
+
+#: search_config.module:170
+msgid "Which tab on the search results will be presented by default. The standard Drupal installation defaults to node_search (\"Content\" tab). This option allows you to default to the \"User\" tab or any other tab from contributed search modules, e.g. Apachesolr which implements a tab called \"Search\" to display its results"
+msgstr "Quel onglet des résultats de la recherche sera affiché par défaut. L'installation Drupal standard met par défaut à node_search (onglet \"Contenu\"). Cette option vous permet de choisir par défaut l'onglet \"Utilisateur\" ou n'importe quel onglet d'un module de recherche, par exemple Apachesolr qui implémente un onlet \"Search\" pour afficher ses résultats"
+
+
+#: search_config.module:177
+msgid "Default Search"
+msgstr "Recherche par défaut"
+
+#: search_config.module:187
+msgid "Keywords"
+msgstr "Mots-clés"
+
+#: search_config.module:190
+msgid "Configuration for which keyword search fields should not be displayed."
+msgstr "Configuration pour laquelle les champs de recherche par mot-clé ne doivent pas être affichés."
+
+#: search_config.module:195
+msgid "Containing any of the words"
+msgstr "Contenant l'un des mots"
+
+#: search_config.module:201
+msgid "Containing the phrase"
+msgstr "Contenant l'expression entière"
+
+#: search_config.module:207
+msgid "Containing none of the words"
+msgstr "Ne contenant pas les mots"
+
+#: search_config.module:215;229
+msgid "Categories"
+msgstr "Catégories"
+
+#: search_config.module:218
+msgid "Categories to display"
+msgstr "Catégories à afficher"
+
+#: search_config.module:223
+msgid "Disable category search"
+msgstr "Désactiver la recherche de catégories"
+
+#: search_config.module:234
+msgid "Disable searching by the selected categories"
+msgstr "Désactiver la recherche par les catégories sélectionnées"
+
+#: search_config.module:244
+msgid "Node types"
+msgstr "Type de noeuds"
+
+#: search_config.module:251
+msgid "Search Form"
+msgstr "Formulaire de recherche"
+
+#: search_config.module:253
+msgid "Node types that users shouldn't be allowed to search by using the the advanced search form."
+msgstr "Types de noeud que les utilisateurs ne doivent pas être autorisés à chercher en utilisant la recherche avancée."
+
+#: search_config.module:264
+msgid "Search Index"
+msgstr "Index de recherche"
+
+#: search_config.module:266
+msgid "Node types that should not be index by the search module. Any node type set to not be indexed will also be removed from the search form. If you select all available node types to not be index then the search module will be rendered unusable as no nodes will be indexed."
+msgstr "Types de noeud qui ne doivent pas être indexés par le module search. Les types de noeud à ne pas indexer seront aussi retirés du formulaire de recherche. Si vous sélectionnez tous les types de noeud à ne pas indexer, alors le module search sera inutilisable car aucun noeud ne sera indexé."
+
+#: search_config.module:302
+msgid "You can not set all node types to be not indexed by the search module. Disable the search module if that is what you want."
+msgstr "Vous devez choisir au moins un type de noeud à indexer par le module search. Sinon désactivez le module search."
+
+#: search_config.module:318
+msgid "Search index node types do not match form node types. Please check the setting for %nodes."
+msgstr "La recherche de types de noeud à indexer ne trouve pas de types de noeud. Veuillez vérifier le paramètrage pour %nodes."
+
+#: search_config.module:19
+msgid "search by node type"
+msgstr "recherche par type de noeud"
+
+#: search_config.module:19
+msgid "search by category"
+msgstr "recherche par catégorie"
+
+#: search_config.module:19
+msgid "use keyword search"
+msgstr "utiliser la recherche par mot-clé"
+
+#: search_config.info:0
+msgid "Search config"
+msgstr "Configuration de la recherche"
+
+#: search_config.info:0
+msgid "Configure display of the advanced search form"
+msgstr "Configurer l'affichage du formulaire de recherche avancée"
