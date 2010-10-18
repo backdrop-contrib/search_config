@@ -323,8 +323,8 @@ function search_config_query_alter(QueryAlterableInterface $query) {
   }
   // Double check to ensure that the i and n aliases are pointing to 
   // the search index and node table.
-  foreach ($intersection as $alias => $info) {
-    if ($tables[$alias]['table'] != $info) {
+  foreach ($intersection as $alias => $table) {
+    if ($tables[$alias]['table'] != $table) {
       return;
     }
   }

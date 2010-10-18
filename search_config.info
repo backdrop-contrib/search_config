@@ -3,5 +3,5 @@ name = Search config
 description = Configure display of the advanced search form
 dependencies[] = search
 files[] = search_config.module
-project = Search
+package = Search
 core = 7.x
