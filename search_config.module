@@ -30,40 +30,50 @@ function search_config_perm() {
     );
 }
 
-
+/**
+ * Implementation of hook_form_FORM_ID_alter()
+ * 
+ * Provides additional configuration settings for administrative users.
+ */
 function search_config_form_search_admin_settings_alter(&$form, &$form_state, $form_id) {
+  $form['content_ranking']['#weight'] = 1;
   $form['search_config'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Advanced search configuration'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#title' => t('Advanced search form configuration'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="search_active_modules[node]"]' => array('checked' => TRUE),
+        ),
+      ),
   );
-
-  // Keyword boxes:
-  $form['search_config']['keywords'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Keywords'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE ,
-    '#description' => t('Configuration for which keyword search fields should not be displayed.')
+  // Keywords
+  $form['search_config']['search_config_keywords'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Advanced Search: keyword search'),
+    '#options' => array(
+      'search_config_keywords_any' => t('Containing any of the words'),       // 'search_config_disable_or'
+      'search_config_keywords_phrase' => t('Containing the phrase'),          // 'search_config_disable_phrase'
+      'search_config_keywords_exclude' => t('Containing none of the words'),  // 'search_config_disable_negative'
+      ),
+    '#description' => t('Select advanced keyword search options.'),
+    '#default_value' => variable_get('search_config_keywords', array()),
+    );
+  // Node types: Perhaps these settings should live on the content types.
+  $content_types = node_type_get_names();
+  $form['search_config']['search_config_content_types'] = array(
+    '#type' => 'checkboxes',  // 'search_config_disable_type'
+    '#title' => t('Advanced Search: content types'),
+    '#description' => t('Selected node types will be available for users to filter search results.'),
+    '#options' => $content_types,
+    '#default_value' => variable_get('search_config_content_types', array_keys($content_types)),
   );
-
-  $form['search_config']['keywords']['search_config_disable_or'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Containing any of the words'),
-    '#default_value' => variable_get('search_config_disable_or', 0)
-  );
-
-  $form['search_config']['keywords']['search_config_disable_phrase'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Containing the phrase'),
-    '#default_value' => variable_get('search_config_disable_phrase', 0)
-  );
-
-  $form['search_config']['keywords']['search_config_disable_negative'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Containing none of the words'),
-    '#default_value' => variable_get('search_config_disable_negative', 0)
+  $form['search_config']['search_config_include'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Content types to display in search results'),
+    '#options' => $content_types,  // search_config_disable_index_type
+    '#default_value' => variable_get('search_config_include', array_keys($content_types)),
+    '#description' => t('Node types to display in <strong>search results</strong>. Content types that are removed from 
+      the search results will also be removed from the advanced search option.')
   );
 
   // Taxonomy box
@@ -72,7 +82,6 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
       '#type' => 'fieldset',
       '#title' => t('Categories'),
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE ,
       '#description' => t('Categories to display')
     );
 
@@ -93,46 +102,6 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
     );
   }
 
-  // Node types
-  $types = node_type_get_names();
-  $types = array_merge(array('all' => 'Disable all'), $types);
-
-  $form['search_config']['type'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Node types'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE ,
-  );
-
-  $form['search_config']['type']['form'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Search Form'),
-    '#collapsible' => FALSE,
-    '#description' => t('Node types that users shouldn\'t be allowed to search by using the the advanced search form.')
-  );
-
-  $form['search_config']['type']['form']['search_config_disable_type'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $types,
-    '#default_value' => variable_get('search_config_disable_type', array())
-  );
-
-  $form['search_config']['type']['index'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Search Index'),
-    '#collapsible' => FALSE,
-    '#description' => t('Node types that should not be index by the search module. Any node type set to not be indexed will also be removed from the search form. If you select all available node types to not be index then the search module will be rendered unusable as no nodes will be indexed.')
-  );
-
-  // If all node types are disabled then the search module is useless.
-  unset($types['all']);
-  reset($types);
-
-  $form['search_config']['type']['index']['search_config_disable_index_type'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $types,
-    '#default_value' => variable_get('search_config_disable_index_type', array())
-  );
   $form['#validate'][] = 'search_config_validate';
 }
 
@@ -248,7 +217,12 @@ function search_config_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
-
+/**
+ * Validate additional fields on search_admin_settings form.
+ * 
+ * TODO: the form alter implementation has been updated and variable names have
+ * changed.  This validation sequence must also be updated.
+ */
 function search_config_validate($form, &$form_state) {
   if ($form_state['values']['form_id'] == 'search_admin_settings' && $form_state['values']['op'] == t('Save configuration')) {
     $post_values = $form_state['values'];
@@ -314,8 +288,10 @@ function search_config_query_alter(QueryAlterableInterface $query) {
     }
   }
   // Remove hidden content types.
-  $hidden_content_types = variable_get('search_config_disable_index_type', array());
-  $hidden_content_types = array_filter($hidden_content_types);
+  $content_types = node_type_get_types();
+  $included = variable_get('search_config_include', array_keys($content_types));
+  $included = array_filter($included);
+  $hidden_content_types = array_diff(array_keys($content_types), $included);
   if (!empty($hidden_content_types)) {
     $and = db_and();
     foreach ($hidden_content_types as $index => $content_type) {
