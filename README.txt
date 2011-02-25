@@ -1,4 +1,3 @@
-/* $Id$*/
 
 search_config is used to configure the advanced search form.
 
