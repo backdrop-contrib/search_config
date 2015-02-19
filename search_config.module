@@ -45,6 +45,7 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
         ),
       ),
   );
+  $config = config('search_config.settings');
   // Keywords
   $form['search_config']['search_config_keywords'] = array(
     '#type' => 'checkboxes',
@@ -55,7 +56,8 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
       'search_config_keywords_exclude' => t('Containing none of the words'),  // 'search_config_disable_negative'
       ),
     '#description' => t('Select advanced keyword search options.'),
-    '#default_value' => variable_get('search_config_keywords', array()),
+    '#default_value' => $config->get('keywords'),
+    //'#default_value' => variable_get('search_config_keywords', array()),
     );
   // Node types: Perhaps these settings should live on the content types.
   $content_types = node_type_get_names();
@@ -64,13 +66,15 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
     '#title' => t('Advanced Search: content types'),
     '#description' => t('Selected node types will be available for users to filter search results.'),
     '#options' => $content_types,
-    '#default_value' => variable_get('search_config_content_types', array_keys($content_types)),
+    '#default_value' => $config->get('content_types'),
+    //'#default_value' => variable_get('search_config_content_types', array_keys($content_types)),
   );
   $form['search_config']['search_config_include'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Content types to display in search results'),
     '#options' => $content_types,  // search_config_disable_index_type
-    '#default_value' => variable_get('search_config_include', array_keys($content_types)),
+    '#default_value' => $config->get('include'),
+    //'#default_value' => variable_get('search_config_include', array_keys($content_types)),
     '#description' => t('Node types to display in <strong>search results</strong>. Content types that are removed from 
       the search results will also be removed from the advanced search option.')
   );
@@ -87,7 +91,8 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
     $form['search_config']['category']['search_config_disable_category_all'] = array(
       '#type' => 'checkbox',
       '#title' => t('Disable category search'),
-      '#default_value' => variable_get('search_config_disable_category_all', 0)
+      '#default_value' => $config->get('disable_category_all'),
+      //'#default_value' => variable_get('search_config_disable_category_all', 0)
     );
 
     $form['search_config']['category']['search_config_disable_category'] = array(
@@ -96,7 +101,8 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
       '#options' => $taxonomy,
       '#size' => 10,
       '#multiple' => TRUE,
-      '#default_value' => variable_get('search_config_disable_category', array()),
+      '#default_value' => $config->get('disable_category'),
+      //'#default_value' => variable_get('search_config_disable_category', array()),
       '#description' => t('Disable searching by the selected categories')
     );
   }
@@ -109,15 +115,19 @@ function search_config_form_search_admin_settings_alter(&$form, &$form_state, $f
  */
 function search_config_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'search_form') {
+    $config = config('search_config.settings');
     // Keywords
     if (user_access('use keyword search')) {
-      if (variable_get('search_config_disable_or', 0)) {
+      //variable_get('search_config_disable_or'
+      if ($config->get('disable_or')) {
         unset($form['advanced']['keywords']['or']);
       }
-      if (variable_get('search_config_disable_phrase', 0)) {
+      //variable_get('search_config_disable_phrase', 0
+      if ($config->get('disable_phrase')) {
         unset($form['advanced']['keywords']['phrase']);
       }
-      if (variable_get('search_config_disable_negative', 0)) {
+      //variable_get('search_config_disable_negative', 0)
+      if ($config->get('disable_negative')) {
         unset($form['advanced']['keywords']['negative']);
       }
     }
@@ -128,7 +138,8 @@ function search_config_form_alter(&$form, &$form_state, $form_id) {
 
     // Node types
     // We will need to rebuild the checkboxes for the node types
-    $remove = variable_get('search_config_disable_type', array());
+    //$remove = variable_get('search_config_disable_type', array());
+    $remove = $config->get('disable_type');
 
     if ($remove['all'] || !user_access('search by node type')) {
       unset($form['advanced']['type']);
@@ -167,11 +178,13 @@ function search_config_form_alter(&$form, &$form_state, $form_id) {
 
     if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
       // Taxonomy
-      if (variable_get('search_config_disable_category_all', 0) || !user_access('search by category')) {
+      //variable_get('search_config_disable_category_all', 0)
+      if ($config->get('disable_category_all') || !user_access('search by category')) {
         unset($form['advanced']['category']);
       }
       else {
-        $terms = variable_get('search_config_disable_category', array());
+        //$terms = variable_get('search_config_disable_category', array());
+        $terms = $config->get('disable_category');
 
         if (module_exists('og_vocab')) {
           $groupnode = og_get_group_context();
@@ -288,7 +301,8 @@ function search_config_query_alter(QueryAlterableInterface $query) {
   }
   // Remove hidden content types.
   $content_types = node_type_get_types();
-  $included = variable_get('search_config_include', array_keys($content_types));
+  //$included = variable_get('search_config_include', array_keys($content_types));
+  $included = $config->get('include');
   $included = array_filter($included);
   $hidden_content_types = array_diff(array_keys($content_types), $included);
   if (!empty($hidden_content_types)) {
@@ -298,4 +312,47 @@ function search_config_query_alter(QueryAlterableInterface $query) {
     }
     $query->condition($and);
   }
+}
+
+/**
+ * Implements hook_config_info()
+ * @return mixed
+ */
+function search_config_config_info() {
+  // If this configuration file points to one particular file, a "name" key
+  // will display that exact string for that file.
+  $prefixes['search_config.settings'] = array(
+    'label' => t('Search config settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
+ * Move search_config settings from variables to config.
+ */
+function search_config_update_1000() {
+  // Migrate variables to config.
+  $config = config('search_config.settings');
+  $config->set("keywords", update_variable_get('search_config_keywords', array()));
+  $config->set("content_types", update_variable_get('search_config_content_types',array()));
+  $config->set("include", update_variable_get('search_config_include', array()));
+  $config->set("disable_category_all", update_variable_get('search_config_disable_category_all', array()));
+  $config->set("disable_category", update_variable_get('search_config_disable_category', array()));
+  $config->set("disable_or", update_variable_get('search_config_disable_or', 0));
+  $config->set("disable_phrase", update_variable_get('search_config_disable_phrase', 0));
+  $config->set("disable_negative", update_variable_get('search_config_disable_negative', 0));
+  $config->set("disable_type", update_variable_get('search_config_disable_type', array()));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('search_config_keywords');
+  update_variable_del('search_config_content_types');
+  update_variable_del('search_config_include');
+  update_variable_del('search_config_disable_category_all');
+  update_variable_del('search_config_disable_category');
+  update_variable_del('search_config_disable_or');
+  update_variable_del('search_config_disable_phrase');
+  update_variable_del('search_config_disable_negative');
+  update_variable_del('search_config_disable_type');
 }
